@@ -20,9 +20,9 @@ void z_handler(int sig);
 int main(int argc, char *argv[])
 {
     /* 행맨 게임을 위한 변수들 */
-    char word_bank[WORD_CNT][BUFSIZE] = {"apple", "banana", "bigdata", "android", "mermaid"}; // 맞춰야하는 문자열을 저장하는 변수
-    char q_word[BUFSIZE];                                                                     // 단어 저장소에서 꺼낸 문자열이 담길 변수
-    char print_str[BUFSIZE];                                                                  // 현재까지 맞춘 단어를 보여주는 변수
+    char word_bank[WORD_CNT][BUFSIZE] = {"ickle", "galaxy", "mermaid", "counseling", "dandelion"}; // 맞춰야하는 문자열을 저장하는 변수
+    char q_word[BUFSIZE];                                                                          // 단어 저장소에서 꺼낸 문자열이 담길 변수
+    char print_str[BUFSIZE];                                                                       // 현재까지 맞춘 단어를 보여주는 변수
 
     int try_cnt = 0; // 시도 횟수
 
@@ -91,7 +91,8 @@ int main(int argc, char *argv[])
             int index = rand() % WORD_CNT;
             int word_len = 0;
             char clnt_str[BUFSIZE]; // 클라이언트가 입력한 정답을 입력받을 변수
-            
+            char send_str[BUFSIZE]; // 포맷팅을 위한 변수
+
             strcpy(q_word, word_bank[index]);
 
             for (int i = 0; i < strlen(q_word); i++)
@@ -102,10 +103,10 @@ int main(int argc, char *argv[])
             word_len = strlen(q_word);
 
             printf("정답 문자열 : %s\n", q_word);
-            printf("가려진 문자열 : %s\n", print_str);
 
             write(fd1[1], &word_len, sizeof(int)); // 문자 수 전달
 
+            try_cnt = 0;
             while (true)
             {
                 read(fd2[0], clnt_str, BUFSIZE);
@@ -113,21 +114,27 @@ int main(int argc, char *argv[])
                 // 단어 입력 시
                 if (strlen(clnt_str) == 1)
                 {
+                    int flag = false;
                     for (int j = 0; j < strlen(q_word); j++)
                         if (clnt_str[0] == q_word[j])
+                        {
                             print_str[j] = clnt_str[0];
+                            flag = true;
+                        }
+                    if(flag == false)
+                        write(fd1[1], "퀴즈에 해당 문자가 없습니다. 다른 문자를 입력해보세요!", BUFSIZE);
                 }
                 else
                 {
                     if (strcmp(clnt_str, q_word) == 0)
                         strcpy(print_str, clnt_str);
+                    else
+                        write(fd1[1], "오답입니다!. 다른 단어를 입력해보세요!", BUFSIZE);
                 }
                 try_cnt++;
 
                 if (strcmp(q_word, print_str) == 0)
                 {
-                    char send_str[BUFSIZE]; // 포맷팅을 위한 변수
-
                     write(fd1[1], "축하드립니다! 정답입니다!", BUFSIZE);
                     sprintf(send_str, "맞힌 단어 : %s", print_str);
                     write(fd1[1], send_str, BUFSIZE);
@@ -138,7 +145,8 @@ int main(int argc, char *argv[])
                     break;
                 }
 
-                write(fd1[1], print_str, BUFSIZE);
+                sprintf(send_str, "현재 맞춘 문자: %s", print_str);
+                write(fd1[1], send_str, BUFSIZE);
                 write(fd1[1], "", BUFSIZE);
             }
         }
@@ -159,8 +167,7 @@ int main(int argc, char *argv[])
                 {
                     read(fd1[0], buffer, BUFSIZE);
                     write(clnt_sock, buffer, BUFSIZE);
-                    printf("buffer 값 : %s\n", buffer);
-                    
+
                     if (strcmp(buffer, "프로그램을 종료합니다.") == 0)
                         flag = false;
 

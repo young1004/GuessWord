@@ -112,20 +112,16 @@ int main(int argc, char *argv[])
         while (true)
         {
             read(sock, serv_message, BUFSIZE);
+            if (strcmp(serv_message, "") == 0)
+                break;
             printf("%s\n", serv_message);
 
             if (strcmp(serv_message, "프로그램을 종료합니다.") == 0)
                 flag = false;
-
-            if (strcmp(serv_message, ""))
-                break;
         }
 
         if (flag == false)
-        {
-            printf("최종탈출 진입!\n");
             break;
-        }
             
     }
 
